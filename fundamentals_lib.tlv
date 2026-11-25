@@ -1,4 +1,4 @@
-\m4_TLV_version 1d: tl-x.org
+\m5_TLV_version 1d: tl-x.org
 \SV
 /*
 Copyright (c) 2018, Steven F. Hoover
@@ -27,8 +27,8 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-m4+definitions(['
-
+\m5
+ nullify(
   // ====================
   // Generic Logic Macros
   // ====================
@@ -69,8 +69,7 @@ m4+definitions(['
 
   // For \TLV tree_redux:
   m4_define(['m4_tree_redux_uniquifier'], 0)
-'])
-
+ )
 
 
 // This can be used to instantiate an m4_ macro (with any number of argumenets) that produces no new lines
@@ -79,14 +78,14 @@ m4+definitions(['
    m4_echo(['m4_']['_macro_name'])(m4_shift($@))
 \TLV with(_etc)
    m4_push(tmp, m4_push_TLV_set(, $@))
-   m4+m4_tmp
+   m5+m4_tmp
    m4_pop_set()m4_pop(tmp)
 \TLV with_seq(_etc)
    m4_push(tmp, m4_push_TLV_set(_seq, $@))
-   m4+m4_tmp
+   m5+m4_tmp
    m4_pop_set()m4_pop(tmp)
 \TLV ifelse(_a, _b, _match_block, _mismatch_block, _etc)
-   m4_ifelse(['_a'], ['_b'], ['m4+_match_block'], m4_eval($# == 4), 1, ['m4+_mismatch_block'], m4_eval($# > 4), 1, ['m4_push(_ifelse_args, ['m4_shift(m4_shift(m4_shift($@)))'])m4+ifelse(m4__ifelse_args)m4_pop(_ifelse_args)'], [''])
+   m4_ifelse(['_a'], ['_b'], ['m5+_match_block'], m4_eval($# == 4), 1, ['m5+_mismatch_block'], m4_eval($# > 4), 1, ['m4_push(_ifelse_args, ['m4_shift(m4_shift(m4_shift($@)))'])m5+ifelse(m4__ifelse_args)m4_pop(_ifelse_args)'], [''])
 
 
 // forloop(_var, #from, #to, _block)
@@ -97,15 +96,15 @@ m4+definitions(['
 //   _block: The TLV code block to repeat.
 \TLV forloop(_var, #_from, #_to, _block)
    m4_push(['_var'], ['#_from'])// forloop(_var, #_from, #_to, <block>)
-   m4+forloop_inner(['_var'], ['#_from'], ['#_to'], ['_block'])
+   m5+forloop_inner(['_var'], ['#_from'], ['#_to'], ['_block'])
    m4_pop(['_var'])
 \TLV forloop_inner(_var, #_from, #_to, _block)
    // forloop_inner(_var, #_from, #_to, <block>)
-   m4+ifelse(m4_eval(#_from < #_to), 0, [''],
+   m5+ifelse(m4_eval(#_from < #_to), 0, [''],
       \TLV
-         m4+_block
+         m5+_block
          m4_push(['_var'], m4_eval(m4_echo(['m4_']_var) + 1))
-         m4+forloop_inner(['_var'], m4_eval(#_from + 1), ['#_to'], ['_block'])
+         m5+forloop_inner(['_var'], m4_eval(#_from + 1), ['#_to'], ['_block'])
          m4_pop(['_var'])
       )
 
@@ -125,9 +124,9 @@ m4+definitions(['
 //   _op: The operation to apply, where $1 and $2 represent the input $_sigs, eg ['$1 + $2'], where $3 is the level number.
 //   _default_value: The value/expression to reduce at the last level beyond #_MAX.
 // Example:
-//   m4+tree_redux(/top, /flat, 9, 0, @1, $sig[3:0], 3, m4_arg(1) + m4_arg(2), [''0'])
+//   m5+tree_redux(/top, /flat, 9, 0, @1, $sig[3:0], 3, m4_arg(1) + m4_arg(2), [''0'])
 \TLV tree_redux(/_top, /_source_hier, #_MAX, #_MIN, @_stage, $_sig, _branching_factor, _op, _default_value)
-   m4+with(
+   m5+with(
       top,         ['/_top'],
       max,         ['#_MAX'],
       min,         ['#_MIN'],
@@ -141,7 +140,7 @@ m4+definitions(['
       base_hier_name, ['m4_source_hier_name['_tree']m4_tree_redux_uniquifier['_level']'],
       level, 0,
       \TLV
-         m4+tree_redux_inner(0, 1)
+         m5+tree_redux_inner(0, 1)
          @m4_stage
             $m4_sig = /m4_base_hier_name['0'][0]$m4_sig;  // Pull $_sig out of level0 hierarchy scope.
       )
@@ -152,7 +151,7 @@ m4+definitions(['
 //   #_level: 0.., logic level of the reduduction.
 //   #_spread: 1, m4_branching_factor(0), , the number of outputs to reduce at this level.
 \TLV tree_redux_inner(#_level, #_spread)
-   m4+with_seq(
+   m5+with_seq(
       level,        ['#_level'],
       next_level,   ['m4_eval(#_level + 1)'],
       in_spread,    ['m4_eval(#_spread * m4_branching_factor(#_level))'],
@@ -166,11 +165,11 @@ m4+definitions(['
       base_index_expr, ['#m4_base_hier_name['']#_level * m4_branching_factor(#_level) + m4_level_min'],
       \TLV
          // Recursively generate upstream logic.
-         m4_ifexpr(m4_last_level, [''], ['m4+tree_redux_inner(m4_next_level, m4_in_spread)'])
+         m4_ifexpr(m4_last_level, [''], ['m5+tree_redux_inner(m4_next_level, m4_in_spread)'])
          // Logic at this level.
          /m4_base_hier_name['']#_level[m4_eval(m4_min + #_spread - 1):m4_min]
             @m4_stage
-               m4+with(
+               m5+with(
                   ['# Define op_expr as a recursive macro returning the single-line redux expression, either a signal or the operation on the
                     # signal and the remaining operations.
                     # op_expr(cnt)'],
@@ -188,7 +187,7 @@ m4+definitions(['
 
 // Reduction macro.
 // Performs an operation across all instances of a hierarchy and provides the result outside that hierarchy.
-// m4+redux($sum[7:0], /hier, max, min, $addend, '0, +)
+// m5+redux($sum[7:0], /hier, max, min, $addend, '0, +)
 \TLV redux($_redux_sig,/_hier,#_MAX,#_MIN,$_sig,$_init_expr ,_op)
    \always_comb
       $['']$_redux_sig = $_init_expr ;
@@ -196,9 +195,9 @@ m4+definitions(['
          $_redux_sig = $_redux_sig _op /_hier[i]$_sig;
 
 
-// Similar to m4+redux, but each element is conditioned.
+// Similar to m5+redux, but each element is conditioned.
 // Performs an operation across all instances of a hierarchy and provides the result outside that hierarchy.
-// m4+redux_cond($selected_value[7:0], /hier, max, min, $value, '0, |, $select)
+// m5+redux_cond($selected_value[7:0], /hier, max, min, $value, '0, |, $select)
 \TLV redux_cond($_redux_sig,/_hier,#_MAX,#_MIN,$_sig,$_init_expr ,_op,$_cond_expr)
    /_hier[*]
       $_sig['']_cond = $_cond_expr ? $_sig : $_init_expr ;
@@ -209,7 +208,7 @@ m4+definitions(['
 
 
 // Select across a hierarchy (MUX) with a decoded select.  Works for $pipe_signals and $ANY.
-// m4+select($selected_value[7:0], /top, /hier, ...fix)
+// m5+select($selected_value[7:0], /top, /hier, ...fix)
 //$_redux_sig The resulting signal, including bit range.
 //  /_top Base scope for references.
 // /_hier  use /_top['']/_hier[*]/_subhier
@@ -235,13 +234,13 @@ m4+definitions(['
                $['']$_sig = /_top['']/_hier/_sel_sig_subhier['']$_sel_sig ? /_top['']/_hier['']/_subhier['']$_sig : '0;
             else
                $_sig = /_top['']/_hier['']/_sel_sig_subhier['']$_sel_sig ? /_top['']/_hier['']/_subhier$_sig : /_hier[m4_hier_index-1]/accum$_sig;
-   m4_ifelse($_redux_sig_cond,['-'],['
+   m4_ifelse($_redux_sig_cond,['-'], m4_pragma_disable_quote_checks['
    $_redux_sig = /_hier[\$high(/_top['']/_hier[*]/_sel_sig_subhier['']$_sel_sig)]/accum$_sig;
    '], ['
    m4_ifelse(m4_assign_redux_sig_cond, [''], [''], S_redux_sig_cond = | m/_top/_hier[*]/_sel_sig_subhier['']$_sel_sig;)
    m4_ifelse(S_redux_sig_cond, [''], [''], ?S_redux_sig_cond)
    m4_ifelse(S_redux_sig_cond, [''], [''], ['   '])$_redux_sig = /_hier[\$high(/_top['']/_hier[*]/_sel_sig_subhier['']$_sel_sig)]/accum$_sig;'])
-   /* Old way:
+   /* Old way:m4_pragma_enable_quote_checks
    \always_comb
       $m4_redux_sig = m4_init;
       for (int i = m4_MIN; i <= m4_MAX; i++)
